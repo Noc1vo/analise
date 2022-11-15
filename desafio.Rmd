@@ -1,0 +1,111 @@
+---
+title: "Item - 1) "
+
+output: html_document
+
+---
+
+```{r , include=FALSE}
+if (!require(lubridate)) { install.packages('lubridate')}
+if (!require(readxl)) { install.packages('readxl')}
+if (!require(tidyverse)) { install.packages('tidyverse')}
+if (!require(plotly)) { install.packages('plotly')}
+if (!require(plotly)) { install.packages('shiny')}
+library(lubridate)
+library(readxl)
+library(tidyverse)
+library(plotly)
+library(shiny)
+dados <- read_excel("dados_desafiodatascientistintern_vendas_distribuidoras_anp.xlsx")
+dados$regiao = factor(dados$regiao, labels = c('BR', 'DF', 'GO', 'MA', 'MG', 'MT', 'PA', 'SP', 'TO'))
+```
+### Consumo de combustivel por Unidades federativas
+
+Analisando o gráfico abaixo podemos observar a sazonalidade das vendas de combustíveis por estados.
+
+```{r graf1, message=FALSE, warning=FALSE, echo=FALSE, fig.height=4, fig.width=6}
+
+graf1 = dados |> 
+  filter(regiao != 'BR') |> 
+  gather(key = 'anos',
+         value = m3,
+         `2000`:`2020`) |> 
+  mutate(data = paste('1/',meses,'/',anos, sep = ''),
+         data = dmy(data),
+         regiao = reorder(regiao, -m3)) |> 
+  ggplot(aes(x = data, y = m3, col = regiao)) +
+  geom_line() +
+  scale_y_continuous(labels = scales::label_number(decimal.mark = '.', big.mark = '.')) +
+  scale_x_date(labels = scales::date_format("%Y"),
+               date_breaks = 'year',
+               limits = as.Date(c("2000-01-01", '2020-12-01'))) +
+  labs(col = 'Regiões', x = '')  +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 75, hjust = 1))
+
+div(ggplotly(graf1, width = 700, height = 400), align = 'center')
+
+```
+<p style="text-align: center;">Figura 1. Gráfico interativo da sazonalidade do consumo de combustivel por UF em m³.</p>
+As sazonalidades aparentam ser iguais para cada estado com momentos de máximos próximo ao meio de cada ano, e momentos de mínimos entre o início e final de cada ciclo, elas podem ter diversos fatores associados que possam explicar seu comportamento. Por exemplo, como todo ano existe o recesso no final de dezembro, podemos supor que nesse período há menos indústrias operando em sua capacidade total, logo, a menos consumo de combustível, isso pode ser um dos fatores que explicar as baixas dos consumos nos finais e aumento no início de ano. Além disso, temos distribuições bastante desiguais onde vemos os estados de SP e MT muito discrepantes em relação aos demais estados, que também pode ser justificado pelo grau de industrialização em relação as outras regiões.
+
+Outra forma de visualização
+
+```{r graf, message=FALSE, warning=FALSE, echo=FALSE, fig.height=5, fig.width=10, fig.align='center', fig.cap='Figura 2. Gráficos de sazonalidade desagregado por estados.'}
+
+graf1 = dados |> 
+  filter(regiao != 'BR') |> 
+  gather(key = 'anos',
+         value = m3,
+         `2000`:`2020`) |> 
+  mutate(data = paste('1/',meses,'/',anos, sep = ''),
+         data = dmy(data),
+         regiao = reorder(regiao, -m3)) |> 
+  ggplot(aes(x = data, y = m3, col = regiao)) +
+  geom_line() +
+  scale_y_continuous(labels = scales::label_number(decimal.mark = '.', big.mark = '.')) +
+  scale_x_date(labels = scales::date_format("%Y"),
+               date_breaks = 'year',
+               limits = as.Date(c("2000-01-01", '2020-12-01'))) +
+  labs(col = 'Regiões', x = '')  +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 75, hjust = 1)) +
+  facet_wrap(~regiao)
+
+graf1
+
+```
+
+### Consumo de combustivel no Brasil
+
+Analisando o gráfico abaixo podemos observar a sazonalidade das vendas de combustiveís total no Brasil.
+
+```{r graf2, message=FALSE, warning=FALSE, echo=FALSE, fig.height=4, fig.width=5}
+
+graf2 = dados |> 
+  filter(regiao == 'BR') |> 
+  gather(key = 'anos',
+         value = m3,
+         `2000`:`2020`) |> 
+  mutate(data = paste('1/',meses,'/',anos, sep = ''),
+         data = dmy(data)) |> 
+  ggplot(aes(x = data, y = m3)) +
+  geom_line(col = 'grey', alpha = 1) +
+  geom_smooth(method = "loess", se = FALSE, col = 'blue', alpha = 0.5) +
+  scale_y_continuous(labels = scales::label_number(decimal.mark = '.', big.mark = '.')) +
+  scale_x_date(labels = scales::date_format("%Y"),
+               date_breaks = 'year',
+               limits = as.Date(c("2000-01-01", '2020-12-01'))) +
+  labs(col = 'Região', x = '')  +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 75, hjust = 1))
+
+div(ggplotly(graf2, width = 600, height = 400), align = 'center')
+
+```
+<p style="text-align: center;">Figura 3. Gráfico interativo da sazonalidade do consumo de combustivel do Brasil em m³.</p>
+A nível Brasil, podemos dizer que o tamanho do mercado pode se caracterizar pela soma de dois agentes econômicos, as firmas e familias, ademais, analisando os últimos 5 anos é possível observar uma estagnação no consumo, que aliado também a pandemia, possivelmente resultou em uma queda. 
+
+
+
+
